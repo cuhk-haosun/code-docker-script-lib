@@ -11,9 +11,13 @@ TOTAL_THREADS=$(nproc)
 LOAD_AVG=$(uptime | awk '{print $10}' | sed 's/,//')
 
 # Calculate THREAD_NUM by subtracting the 5-minute load from total threads
-# If the result is less than 1, set THREAD_NUM to 1 to avoid any issues
 THREAD_NUM=$(echo "$TOTAL_THREADS - $LOAD_AVG" | bc)
-if (( $(echo "$THREAD_NUM < 1" | bc -l) )); then
+
+# Ensure THREAD_NUM is floored
+THREAD_NUM=$(echo "$THREAD_NUM/1" | bc)
+
+# If the result is less than 1, set THREAD_NUM to 1 to avoid any issues
+if (( THREAD_NUM < 1 )); then
   THREAD_NUM=1
 fi
 
