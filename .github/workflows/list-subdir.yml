@@ -1,0 +1,53 @@
+# This library is for listing the subdirs in the folders
+# it is designed for batch processing of files for bioinformatic analysis
+# Xing Zhao 
+
+name: List Subdirectories
+
+on:
+  workflow_call:
+    inputs:
+      INPUT_PATH:
+        description: 'Input path for the files'
+        required: true
+        type: string
+    outputs:
+      matrix:
+        description: 'A JSON array of subfolder names'
+        value: ${{ steps.list_dirs.outputs.matrix }}
+
+jobs:
+  list_directories:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.list_dirs.outputs.matrix }}
+    steps:
+      - name: List Subdirectories
+        id: list_dirs
+        run: |
+          INPUT_PATH="${{ inputs.INPUT_PATH }}"
+          echo "INPUT_PATH=${INPUT_PATH}" >> $GITHUB_ENV
+
+          # Check if the input path exists
+          if [ ! -d "${INPUT_PATH}" ]; then
+            echo "Input path does not exist: ${INPUT_PATH}"
+            exit 1
+          fi
+
+          # Find immediate subdirectories
+          SUBFOLDERS=$(find "${INPUT_PATH}" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+
+          if [ -z "${SUBFOLDERS}" ]; then
+            echo "No subdirectories found in INPUT_PATH: ${INPUT_PATH}"
+            exit 1
+          fi
+
+          echo "Subfolders found: $SUBFOLDERS"
+
+          # Convert the list of subfolders into a JSON array
+          JSON_ARRAY=$(echo "$SUBFOLDERS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+          echo "JSON_ARRAY=${JSON_ARRAY}" >> $GITHUB_ENV
+
+          # Set the output using GITHUB_OUTPUT
+          echo "matrix=${JSON_ARRAY}" >> $GITHUB_OUTPUT
