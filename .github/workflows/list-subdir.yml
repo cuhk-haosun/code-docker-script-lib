@@ -12,6 +12,12 @@ on:
         required: true
         type: string
         
+      RUN_LOCATION:
+        description: 'Location of the runtime environment'
+        default: 'pipeline'
+        required: true
+        type: string
+        
     outputs:
       matrix:
         description: 'A JSON array of subfolder names'
@@ -19,7 +25,8 @@ on:
 
 jobs:
   list_directories:
-    runs-on:  ubuntu-latest
+    runs-on:
+      group: ${{ github.event.inputs.RUN_LOCATION }}
     outputs:
       matrix: ${{ steps.list_dirs.outputs.matrix }}
     steps:
